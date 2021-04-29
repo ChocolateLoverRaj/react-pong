@@ -1,20 +1,31 @@
-import { useEffect } from "react";
-import { useComponentSize } from "react-use-size";
+import { useEffect, useRef } from "react";
 import styles from "./FullscreenCanvas.module.css";
 
-const FullscreenCanvas = () => {
-  const { ref, width, height } = useComponentSize();
+const FullscreenCanvas = (props) => {
+  const { aspectRatio, width, height } = props;
 
+  const ref = useRef(null);
+
+  const shorterWidth = height * aspectRatio;
+  const shorterHeight = width / aspectRatio;
+  const widthShorter = shorterWidth < shorterHeight;
+  const scaledWidth = widthShorter ? shorterWidth : width;
+  const scaledHeight = widthShorter ? height : shorterHeight;
+  console.log(widthShorter, scaledWidth, scaledHeight);
   useEffect(() => {
-    const ctx = ref.current.getContext("2d");
+    const canvas = ref.current;
+    const ctx = canvas.getContext("2d");
     ctx.fillStyle = "green";
-    ctx.fillRect(0, 0, width, height);
-  }, [ref, width, height]);
+    ctx.fillRect(0, 0, scaledWidth, scaledHeight);
+  }, [ref, scaledWidth, scaledHeight, aspectRatio]);
 
   return (
-    <div className={styles.div}>
-      <canvas width={100} height={100} className={styles.canvas} ref={ref} />
-    </div>
+    <canvas
+      width={scaledWidth}
+      height={scaledHeight}
+      className={styles.canvas}
+      ref={ref}
+    />
   );
 };
 
