@@ -2,7 +2,7 @@
  * Scales width and height up for maximum size while maintaining aspect ratio
  */
 const scaleFullscreen = (maxWidth, maxHeight, scaleSize) => {
-  const scale = Math.max(
+  const scale = Math.min(
     maxHeight / scaleSize.height,
     maxWidth / scaleSize.width
   );
