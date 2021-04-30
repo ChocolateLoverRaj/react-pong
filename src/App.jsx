@@ -12,6 +12,11 @@ const tickTime = 50;
 const paddleWidth = 20;
 const paddleHeight = 100;
 const paddleColor = blue.primary;
+const scoreColor = blue.primary;
+const scoreSize = 100;
+const ballColor = "lightGray";
+const ballWidth = 20;
+const ballHeight = 20;
 
 export default function App() {
   const {
@@ -23,7 +28,8 @@ export default function App() {
 
   const game = useRef({
     player0: { paddleY: 400, score: 0 },
-    player1: { paddleY: 400, score: 0 }
+    player1: { paddleY: 400, score: 0 },
+    ball: { x: 800 - ballWidth / 2, y: 450 - ballHeight / 2 }
   });
 
   const { width, height, scale } = scaleFullscreen(
@@ -68,6 +74,21 @@ export default function App() {
           paddleWidth,
           paddleHeight
         );
+        // Ball
+        ctx.fillStyle = ballColor;
+        ctx.fillRect(
+          game.current.ball.x,
+          game.current.ball.y,
+          ballWidth,
+          ballHeight
+        );
+        // Score
+        ctx.fillStyle = scoreColor;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        ctx.font = `${scoreSize}px Arial`;
+        ctx.fillText(game.current.player0.score, 400, 0);
+        ctx.fillText(game.current.player1.score, 1200, 0);
         requestFrame();
       });
     };
