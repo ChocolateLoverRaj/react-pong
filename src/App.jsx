@@ -4,6 +4,8 @@ import { useComponentSize } from "react-use-size";
 import { useEffect, useRef } from "react";
 import scaleFullscreen from "./lib/scaleFullscreen";
 import { blue } from "@ant-design/colors";
+import useKeysPressed from "./lib/useKeysPressed";
+
 const scaleSize = {
   width: 1600,
   height: 900
@@ -17,6 +19,19 @@ const scoreSize = 100;
 const ballColor = "lightGray";
 const ballWidth = 20;
 const ballHeight = 20;
+const playerKeys = [
+  {
+    up: "w",
+    down: "s"
+  },
+  {
+    up: "ArrowUp",
+    down: "ArrowDown"
+  }
+];
+const paddleXs = [0, 1600 - paddleWidth];
+const scoreXs = [400, 1200];
+const paddleSpeed = 10;
 
 export default function App() {
   const {
@@ -26,9 +41,13 @@ export default function App() {
   } = useComponentSize();
   const canvasRef = useRef(null);
 
+  const keysPressed = useKeysPressed();
+
   const game = useRef({
-    player0: { paddleY: 400, score: 0 },
-    player1: { paddleY: 400, score: 0 },
+    players: [
+      { paddleY: 400, score: 0 },
+      { paddleY: 400, score: 0 }
+    ],
     ball: { x: 800 - ballWidth / 2, y: 450 - ballHeight / 2 }
   });
 
@@ -42,11 +61,26 @@ export default function App() {
   useEffect(() => {
     const handle = setInterval(() => {
       // Logic goes here
+      const playerCount = game.current.players.length;
+      for (let i = 0; i < playerCount; i++) {
+        const player = game.current.players[i];
+        const { up, down } = playerKeys[i];
+        const upPressed = keysPressed.has(up);
+        const downPressed = keysPressed.has(down);
+        if (upPressed && !downPressed) {
+          player.paddleY = Math.max(player.paddleY - paddleSpeed, 0);
+        } else if (downPressed && !upPressed) {
+          player.paddleY = Math.min(
+            player.paddleY + paddleSpeed,
+            900 - paddleHeight
+          );
+        }
+      }
     }, tickTime);
     return () => {
       clearInterval(handle);
     };
-  }, []);
+  }, [keysPressed]);
 
   // Render
   useEffect(() => {
@@ -60,20 +94,14 @@ export default function App() {
     const requestFrame = () => {
       handle = requestAnimationFrame(() => {
         ctx.clearRect(0, 0, 1600, 900);
+        const playerCount = game.current.players.length;
         // Paddles
         ctx.fillStyle = paddleColor;
-        ctx.fillRect(
-          0,
-          game.current.player0.paddleY,
-          paddleWidth,
-          paddleHeight
-        );
-        ctx.fillRect(
-          1600 - paddleWidth,
-          game.current.player0.paddleY,
-          paddleWidth,
-          paddleHeight
-        );
+        for (let i = 0; i < playerCount; i++) {
+          const player = game.current.players[i];
+          const paddleX = paddleXs[i];
+          ctx.fillRect(paddleX, player.paddleY, paddleWidth, paddleHeight);
+        }
         // Ball
         ctx.fillStyle = ballColor;
         ctx.fillRect(
@@ -87,8 +115,11 @@ export default function App() {
         ctx.textAlign = "center";
         ctx.textBaseline = "top";
         ctx.font = `${scoreSize}px Arial`;
-        ctx.fillText(game.current.player0.score, 400, 0);
-        ctx.fillText(game.current.player1.score, 1200, 0);
+        for (let i = 0; i < playerCount; i++) {
+          const player = game.current.players[i];
+          const scoreX = scoreXs[i];
+          ctx.fillText(player.score, scoreX, 0);
+        }
         requestFrame();
       });
     };
