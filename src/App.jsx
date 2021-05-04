@@ -5,6 +5,8 @@ import { useEffect, useRef } from "react";
 import scaleFullscreen from "./lib/scaleFullscreen";
 import { blue } from "@ant-design/colors";
 import useKeysPressed from "./lib/useKeysPressed";
+import bounce from "./lib/bounce";
+import colide1D from "./lib/colide1D";
 
 const scaleSize = {
   width: 1600,
@@ -48,7 +50,11 @@ export default function App() {
       { paddleY: 400, score: 0 },
       { paddleY: 400, score: 0 }
     ],
-    ball: { x: 800 - ballWidth / 2, y: 450 - ballHeight / 2 }
+    ball: {
+      x: 800 - ballWidth / 2,
+      y: 450 - ballHeight / 2,
+      velocity: { speed: 15, direction: (Math.PI * 1) / 4 }
+    }
   });
 
   const { width, height, scale } = scaleFullscreen(
@@ -62,6 +68,7 @@ export default function App() {
     const handle = setInterval(() => {
       // Logic goes here
       const playerCount = game.current.players.length;
+      // Paddle movement
       for (let i = 0; i < playerCount; i++) {
         const player = game.current.players[i];
         const { up, down } = playerKeys[i];
@@ -75,6 +82,51 @@ export default function App() {
             900 - paddleHeight
           );
         }
+      }
+      // Ball movement
+      const movementX =
+        Math.cos(game.current.ball.velocity.direction) *
+        game.current.ball.velocity.speed;
+      const movementY =
+        Math.sin(game.current.ball.velocity.direction) *
+        game.current.ball.velocity.speed;
+      game.current.ball.x += movementX;
+      game.current.ball.y += movementY;
+      // Wall bounce
+      const bounceHorizontal = () => {
+        game.current.ball.velocity.direction = bounce(
+          0,
+          game.current.ball.velocity.direction
+        );
+      };
+      if (game.current.ball.y < 0) {
+        game.current.ball.y += 0 - game.current.ball.y;
+        bounceHorizontal();
+      } else if (game.current.ball.y + ballHeight > 900) {
+        game.current.ball.y -= game.current.ball.y + ballHeight - 900;
+        bounceHorizontal();
+      }
+      // Paddle bounce
+      const collidePaddle = (paddle) =>
+        colide1D(
+          game.current.players[paddle].paddleY,
+          paddleHeight,
+          game.current.ball.y,
+          ballHeight
+        );
+      const bounceVertical = () => {
+        game.current.ball.velocity.direction = bounce(
+          Math.PI / 2,
+          game.current.ball.velocity.direction
+        );
+      };
+      if (game.current.ball.x < paddleWidth && collidePaddle(0)) {
+        bounceVertical();
+      } else if (
+        game.current.ball.x + ballWidth > 1600 - paddleWidth &&
+        collidePaddle(1)
+      ) {
+        bounceVertical();
       }
     }, tickTime);
     return () => {
