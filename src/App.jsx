@@ -34,6 +34,11 @@ const playerKeys = [
 const paddleXs = [0, 1600 - paddleWidth];
 const scoreXs = [400, 1200];
 const paddleSpeed = 10;
+const initialBall = {
+  x: 800 - ballWidth / 2,
+  y: 450 - ballHeight / 2,
+  velocity: { speed: 15, direction: (Math.PI * 1) / 4 }
+};
 
 export default function App() {
   const {
@@ -50,11 +55,7 @@ export default function App() {
       { paddleY: 400, score: 0 },
       { paddleY: 400, score: 0 }
     ],
-    ball: {
-      x: 800 - ballWidth / 2,
-      y: 450 - ballHeight / 2,
-      velocity: { speed: 15, direction: (Math.PI * 1) / 4 }
-    }
+    ball: { ...initialBall }
   });
 
   const { width, height, scale } = scaleFullscreen(
@@ -130,6 +131,17 @@ export default function App() {
         game.current.ball.x -=
           game.current.ball.x + ballWidth - (1600 - paddleWidth);
         bounceVertical();
+      }
+      // Scoring
+      const resetBall = () => {
+        game.current.ball = { ...initialBall };
+      };
+      if (game.current.ball.x + ballWidth < 0) {
+        resetBall();
+        game.current.players[1].score++;
+      } else if (game.current.ball.x > 1600) {
+        resetBall();
+        game.current.players[0].score++;
       }
     }, tickTime);
     return () => {
