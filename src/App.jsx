@@ -121,11 +121,14 @@ export default function App() {
         );
       };
       if (game.current.ball.x < paddleWidth && collidePaddle(0)) {
+        game.current.ball.x += paddleWidth - game.current.ball.x;
         bounceVertical();
       } else if (
         game.current.ball.x + ballWidth > 1600 - paddleWidth &&
         collidePaddle(1)
       ) {
+        game.current.ball.x -=
+          game.current.ball.x + ballWidth - (1600 - paddleWidth);
         bounceVertical();
       }
     }, tickTime);
